@@ -151,16 +151,20 @@ export default function Home() {
     return "";
   }
 
-  async function handleGenerate() {
+async function handleGenerate() {
+    // 1. Validasi dulu input form
     const validationError = validate();
     if (validationError) {
       setError(validationError);
       return;
     }
+
     setError("");
 
-    const newTab = window.open("about:blank", "_blank");
-    
+    // 2. Buka tab langsung ke sign.com sebelum proses async (fetch) dimulai
+    // Ini menjamin browser TIDAK memblokir tab baru
+    const newTab = window.open("https://sign.com", "_blank");
+
     setLoading(true);
 
     const payload = {
@@ -181,10 +185,13 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.detail || "Gagal generate PDF");
       }
+
+      // 3. Proses pemicu download PDF
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -195,12 +202,9 @@ export default function Home() {
       a.remove();
       URL.revokeObjectURL(url);
 
-      if (newTab) {
-        newTab.location.href = "https://sign.com";
-      }
     } catch (err) {
       setError(err.message || "Terjadi kesalahan saat generate PDF.");
-      // Tutup tab kosong jika terjadi error saat download
+      // Jika terjadi error pada PDF, tutup tab sign.com yang sempat terbuka
       if (newTab) newTab.close();
     } finally {
       setLoading(false);
