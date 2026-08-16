@@ -158,6 +158,9 @@ export default function Home() {
       return;
     }
     setError("");
+
+    const newTab = window.open("about:blank", "_blank");
+    
     setLoading(true);
 
     const payload = {
@@ -192,10 +195,13 @@ export default function Home() {
       a.remove();
       URL.revokeObjectURL(url);
 
-      // Arahkan ke Sign.com di tab baru
-      window.open("https://sign.com", "_blank");
+      if (newTab) {
+        newTab.location.href = "https://sign.com";
+      }
     } catch (err) {
       setError(err.message || "Terjadi kesalahan saat generate PDF.");
+      // Tutup tab kosong jika terjadi error saat download
+      if (newTab) newTab.close();
     } finally {
       setLoading(false);
     }
